@@ -1,47 +1,44 @@
+#include <unistd.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include "ncurses_display.h"
 #include "system.h"
-#include <iostream>
-#include <vector>
-#include <string>
 
 #include "linux_parser.h"
 
-int main() {
+#define DEBUG_OUTPUT 0
+
+int main() 
+{
   System system;
 
-  long dUptime = LinuxParser::UpTime();
-  std::cout << "uptime [ main]: " << dUptime << std::endl;
+#if DEBUG_OUTPUT == 1
+  std::cout << "OS: "               << system.OperatingSystem() << std::endl;
+  std::cout << "Kernel: "           << system.Kernel() << std::endl;
+  std::cout << "System Uptime: "    << std::to_string(system.UpTime()) << std::endl;
+  std::cout << "CPU Utilization: "  << std::to_string(system.Cpu().Utilization()*100) << "%" << std::endl;
+  std::cout << "Mem Utilization: "  << std::to_string(system.MemoryUtilization()*100) << "%" << std::endl;
+  std::cout << "NumProcs: "         << std::to_string(system.TotalProcesses()) << std::endl;
+  std::cout << "RunningProcs: "     << std::to_string(system.RunningProcesses()) << std::endl;
+  std::cout << "Total Jiffies: "    << std::to_string(LinuxParser::Jiffies()) << std::endl;
+  std::cout << "Active Jiffies: "   << std::to_string(LinuxParser::ActiveJiffies()) << std::endl;
+  std::cout << "Idle Jiffies: "     << std::to_string(LinuxParser::IdleJiffies()) << std::endl;
 
-  long dPid1Uptime = LinuxParser::ActiveJiffies(1);
-  std::cout << "uptime [pid 1]: " << dPid1Uptime << std::endl;
+  std::cout << "Process List:" << std::endl;
+  std::cout << "----------------------------------------------" << std::endl;
+  for(auto p : system.Processes()) {
+    std::string strpid(std::to_string(p.Pid()));
 
-    std::vector<std::string> usage = LinuxParser::CpuUtilization();
-    std::cout << "cpu usage: ";
-    for(std::string s : usage) {
-        std::cout << s << " ";
-    }
-    std::cout << std::endl;
+    std::cout << "    cmdline[pid " << strpid << "]: " << p.Command() << std::endl;
+    std::cout << "    ram[pid "     << strpid << "]: " << p.Ram() << std::endl;
+    std::cout << "    user[pid "    << strpid << "]: " << p.User() << std::endl;
+    std::cout << "    uid[pid "     << strpid << "]: " << p.UID() << std::endl;
+    std::cout << "    uptime[pid "  << strpid << "]: " << std::to_string(LinuxParser::UpTime(p.Pid())) << std::endl;
+    std::cout << "----------------------------------------------" << std::endl;
+  }
+#endif
 
-    int num_processes = LinuxParser::TotalProcesses();
-    std::cout << "NumProcs: " << num_processes << std::endl;
-
-    int num_running_processes = LinuxParser::RunningProcesses();
-    std::cout << "RunningProcs: " << num_running_processes << std::endl;
-
-    std::string cmdline_pid1 = LinuxParser::Command(1);
-    std::cout << "cmdline[pid 1]: " << cmdline_pid1 << std::endl;
-
-    std::string ram = LinuxParser::Ram(1);
-    std::cout << "ram[pid 1]: " << ram << std::endl;
- 
-    std::string uid = LinuxParser::Uid(1);
-    std::cout << "uid[pid 1]: " << uid << std::endl;
- 
-    std::string user = LinuxParser::User(1);
-    std::cout << "user[pid 1]: " << user << std::endl;
-
-    long uptime = LinuxParser::UpTime(1);
-    std::cout << "uptime[pid 1]: " << uptime << std::endl;
-
-    //NCursesDisplay::Display(system);
+  NCursesDisplay::Display(system);
 }
