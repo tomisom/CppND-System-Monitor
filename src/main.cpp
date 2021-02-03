@@ -29,13 +29,7 @@ int main()
   std::cout << "Process List:" << std::endl;
   std::cout << "----------------------------------------------" << std::endl;
   for(auto p : system.Processes()) {
-    std::string strpid(std::to_string(p.Pid()));
-
-    std::cout << "    cmdline[pid " << strpid << "]: " << p.Command() << std::endl;
-    std::cout << "    ram[pid "     << strpid << "]: " << p.Ram() << std::endl;
-    std::cout << "    user[pid "    << strpid << "]: " << p.User() << std::endl;
-    std::cout << "    uid[pid "     << strpid << "]: " << p.UID() << std::endl;
-    std::cout << "    uptime[pid "  << strpid << "]: " << std::to_string(LinuxParser::UpTime(p.Pid())) << std::endl;
+    p.Print();
     std::cout << "----------------------------------------------" << std::endl;
   }
 #endif

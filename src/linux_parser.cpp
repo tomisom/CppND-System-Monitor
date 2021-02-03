@@ -27,7 +27,7 @@ string GetFloatStringWithPrecision(float val, int precision = 5, bool fixed = fa
   return out.str();
 }
 
-string GetStatusFieldForPid(int pid, enum LinuxParser::STATUS_FIELDS field) {
+string GetStatFieldForPid(int pid, enum LinuxParser::STATUS_FIELDS field) {
   string val;
 
   std::ifstream stream(LinuxParser::kProcDirectory + std::to_string(pid) +
@@ -198,6 +198,25 @@ long LinuxParser::UpTime() {
   return dUptime;
 }
 
+int LinuxParser::CpuCoreCount()
+{
+  string processor;
+  int cpu_count(0);
+  string line;
+  std::ifstream stream(kProcDirectory + kCpuinfoFilename);
+  if (stream.is_open()) {
+    while(std::getline(stream, line)) {
+      if(line.find("processor:") != string::npos) {
+        std::istringstream linestream(line);
+        linestream >> processor >> cpu_count;
+      }
+    }
+  }
+
+  // last value is index of processor, add 1 to make it a count
+  return (cpu_count+1);
+}
+
 long LinuxParser::Jiffies()
 {
   vector<string> cpuvec = LinuxParser::CpuUtilization();
@@ -277,8 +296,8 @@ int LinuxParser::RunningProcesses() {
 
 long LinuxParser::ActiveJiffies(int pid) {
   long utime(0), stime(0), usage(0);
-  string strutime = GetStatusFieldForPid(pid, FIELD_UTIME);
-  string strstime = GetStatusFieldForPid(pid, FIELD_STIME);
+  string strutime = GetStatFieldForPid(pid, FIELD_UTIME);
+  string strstime = GetStatFieldForPid(pid, FIELD_STIME);
   try {
     utime = stol(strutime);
     stime = stol(strstime);
@@ -344,7 +363,7 @@ string LinuxParser::Uid(int pid) {
   return struid;
 }
 
-string LinuxParser::User(int pid[[maybe_unused]]) {
+string LinuxParser::User(int pid) {
   string user;
   string struid = Uid(pid);
 
@@ -371,7 +390,7 @@ string LinuxParser::User(int pid[[maybe_unused]]) {
 
 long LinuxParser::UpTime(int pid) {
   long starttime = 0;
-  string line = GetStatusFieldForPid(pid, FIELD_STARTTIME);
+  string line = GetStatFieldForPid(pid, FIELD_STARTTIME);
   try {
     starttime = stol(line);
   } catch (std::exception& e) {

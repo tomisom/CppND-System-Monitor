@@ -58,7 +58,7 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
   int const pid_column{2};
   int const user_column{9};
   int const cpu_column{18};
-  int const ram_column{28};
+  int const ram_column{26};
   int const time_column{38};
   int const command_column{49};
   wattron(window, COLOR_PAIR(2));
@@ -69,11 +69,24 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
   mvwprintw(window, row, time_column, "TIME+");
   mvwprintw(window, row, command_column, "COMMAND");
   wattroff(window, COLOR_PAIR(2));
+  wclrtobot(window);
   for (int i = 0; i < n; ++i) {
-    mvwprintw(window, ++row, pid_column, to_string(processes[i].Pid()).c_str());
+    ++row;
+    //wmove(window, row, 1);
+    //wclrtoeol(window);
+    mvwprintw(window, row, pid_column, to_string(processes[i].Pid()).c_str());
     mvwprintw(window, row, user_column, processes[i].User().c_str());
     float cpu = processes[i].CpuUtilization() * 100;
-    mvwprintw(window, row, cpu_column, to_string(cpu).substr(0, 6).c_str());
+
+    // limit to 1 decimal place (based on https://stackoverflow.com/a/16606128)
+    std::ostringstream cpu_util_stream;
+    cpu_util_stream.precision(4);
+    cpu_util_stream << cpu;
+    char buf[6];
+    sprintf(buf, "%5.1f", cpu);
+
+    //mvwprintw(window, row, cpu_column, cpu_util_stream.str().substr(0, 4).c_str());
+    mvwprintw(window, row, cpu_column, buf);
     mvwprintw(window, row, ram_column, processes[i].Ram().c_str());
     mvwprintw(window, row, time_column,
               Format::ElapsedTime(processes[i].UpTime()).c_str());
@@ -97,9 +110,9 @@ void NCursesDisplay::Display(System& system, int n) {
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
     box(system_window, 0, 0);
-    box(process_window, 0, 0);
     DisplaySystem(system, system_window);
     DisplayProcesses(system.Processes(), process_window, n);
+    box(process_window, 0, 0);
     wrefresh(system_window);
     wrefresh(process_window);
     refresh();

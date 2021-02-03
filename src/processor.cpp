@@ -8,13 +8,19 @@
 
 using std::string;
 
-Processor::Processor() {
+Processor::Processor()
+{
     for(int i = 0; i < LinuxParser::CPUStates_Count; ++i) {
         proc_util_.push_back(0);
     }
+
+    core_count_ = LinuxParser::CpuCoreCount();
 }
 
-float Processor::Utilization() {
+int Processor::GetCoreCount() { return core_count_; }
+
+float Processor::Utilization()
+{
   float utilization = 0.0;
   std::vector<string> cpu_utilization = LinuxParser::CpuUtilization();
   if (cpu_utilization.size() >= LinuxParser::CPUStates_Count) {
@@ -28,7 +34,7 @@ float Processor::Utilization() {
     // add the user, nice, and system time to get the previous total
     int prev_work = proc_util_[LinuxParser::kUser_] + proc_util_[LinuxParser::kNice_] + proc_util_[LinuxParser::kSystem_];
 
-    // clear rge orevious values from the vector
+    // clear the previous values from the vector
     proc_util_.clear();
 
     // add current values to the vector and add them up

@@ -102,6 +102,7 @@ long Jiffies();
 long ActiveJiffies();
 long ActiveJiffies(int pid);
 long IdleJiffies();
+int CpuCoreCount();
 
 // Processes
 std::string Command(int pid);
